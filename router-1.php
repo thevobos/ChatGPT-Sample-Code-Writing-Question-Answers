@@ -51,3 +51,35 @@ class Router
         throw new Exception('No route found for the specified URI and method.');
     }
 }
+
+
+$router = new Router();
+
+$router->addRoute('GET', '/', function ($uri, $matches) {
+    require 'controllers/index.php';
+});
+
+$router->addRoute('GET', '/about', function ($uri, $matches) {
+    require 'controllers/about.php';
+}, ['auth']);
+
+$router->addRoute('GET', '/contact', function ($uri, $matches) {
+    require 'controllers/contact.php';
+});
+
+$router->addMiddleware('auth', function ($handler) {
+    return function ($uri, $matches) use ($handler) {
+        if (!isAuthenticated()) {
+            require 'controllers/401.php';
+            return;
+        }
+
+        return $handler($uri, $matches);
+    };
+});
+
+try {
+    $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+}catch(Exception $err){ 
+    echo $err->getMessage()
+   }
